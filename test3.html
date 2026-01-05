@@ -1,105 +1,87 @@
 <!DOCTYPE html>
-<html>
+<html lang="fr">
 <head>
-    <title>Test AR #3</title>
+    <meta charset="UTF-8">
+    <title>Carte de visite AR</title>
 
     <!-- A-Frame -->
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
 
-    <!-- AR.js -->
-    <script src="https://cdn.rawgit.com/jeromeetienne/AR.js/2.1.7/aframe/build/aframe-ar.js"></script>
+    <!-- AR.js (CDN valide) -->
+    <script src="https://unpkg.com/ar.js@2.1.7/aframe/build/aframe-ar.js"></script>
 </head>
 
 <body style="margin: 0; overflow: hidden;">
 
-    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;">
-        
-        <!-- Marker for tracking -->
-        <a-marker
-            type="pattern"
-            url="/AR/pattern-hiro.patt"
-            emitevents="true"
-            id="marker"
-        >
-            <!-- Plane to display the image -->
-            <a-plane
-                id="imagePlane"
-                position="4 0 0"
-                rotation="-90 0 0"
-                width="4"
-                height="2.25"
-                material="shader: flat;"
-                scale="2 2 2">
-            </a-plane>
-        </a-marker>
+<a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;">
+    
+    <a-assets>
+        <img id="cardImage" src="capture.jpg">
+    </a-assets>
 
-        <!-- Camera -->
-        <a-entity camera></a-entity>
+    <!-- Marker -->
+    <a-marker
+        id="marker"
+        type="pattern"
+        url="/AR/pattern-hiro.patt"
+        emitevents="true"
+    >
+        <!-- Carte de visite en AR -->
+        <a-plane
+            id="imagePlane"
+            position="0 0 0"
+            rotation="-90 0 0"
+            width="4"
+            height="2.25"
+            material="shader: flat; src: #cardImage;"
+            scale="1 1 1">
+        </a-plane>
+    </a-marker>
 
-    </a-scene>
+    <a-entity camera></a-entity>
+</a-scene>
 
-    <!-- Script -->
-    <script>
-        const imagePlane = document.getElementById("imagePlane");
-        const marker = document.getElementById("marker");
+<script>
+(() => {
+    const plane = document.getElementById("imagePlane");
+    const marker = document.getElementById("marker");
 
-        const imageUrl = "capture.jpg";
-        let isAnimationRunning = false; // To prevent multiple animations
+    let isAnimating = false;
+    const animationDuration = 1000;
 
-        // Marker found
-        marker.addEventListener("markerFound", () => {
-            if (!isAnimationRunning) {
-                animatePosition(0, 4, 0, 1000); 
-                // Animates from (0, 0, 0) to (4, 0, 0) in 1 second
+    marker.addEventListener("markerFound", () => {
+        if (!isAnimating) {
+            animatePlane(0, 1.5);
+        }
+    });
+
+    marker.addEventListener("markerLost", () => {
+        if (!isAnimating) {
+            animatePlane(1.5, 0);
+        }
+    });
+
+    function animatePlane(startX, endX) {
+        isAnimating = true;
+        const startTime = performance.now();
+
+        function update(time) {
+            const progress = Math.min((time - startTime) / animationDuration, 1);
+            const x = startX + (endX - startX) * progress;
+
+            plane.setAttribute("position", `${x} 0 0`);
+
+            if (progress < 1) {
+                requestAnimationFrame(update);
+            } else {
+                isAnimating = false;
             }
-        });
-
-        // Marker lost
-        marker.addEventListener("markerLost", () => {
-            if (!isAnimationRunning) {
-                animatePosition(4, 0, 0, 1000); 
-                // Animates from (4, 0, 0) to (0, 0, 0) in 1 second
-            }
-        });
-
-        function animatePosition(startX, endX, endY, duration) {
-            isAnimationRunning = true;
-
-            const startTime = performance.now();
-            const startY = 0;
-
-            function updatePosition(currentTime) {
-                const elapsedTime = currentTime - startTime;
-
-                if (elapsedTime < duration) {
-                    const newX = startX + (endX - startX) * (elapsedTime / duration);
-                    const newY = startY + (endY - startY) * (elapsedTime / duration);
-
-                    imagePlane.setAttribute(
-                        "position",
-                        `${newX} ${newY} 0`
-                    );
-
-                    requestAnimationFrame(updatePosition);
-                } else {
-                    imagePlane.setAttribute(
-                        "position",
-                        `${endX} ${endY} 0`
-                    );
-                    isAnimationRunning = false;
-                }
-            }
-
-            requestAnimationFrame(updatePosition);
         }
 
-        // Function to update the image source
-        function updateImageSource() {
-            imagePlane.setAttribute("material", "src", imageUrl);
-        }
-        updateImageSource();
-        setInterval(updateImageSource, 5000); // Update every 5 seconds
-    </script>
+        requestAnimationFrame(update);
+    }
+})();
+</script>
+
 </body>
 </html>
-
