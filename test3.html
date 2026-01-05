@@ -1,486 +1,105 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Théo - Carte de Visite AR</title>
-    
-    <!-- AR.js with Three.js -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/ar.js@3.4.5/three.js/ar.js"></script>
-    
-    <style>
-        :root {
-            --color-primary: #208090;
-            --color-accent: #32b8c6;
-            --color-bg: #3d5a64;
-            --color-text: #ffffff;
-            --color-card: #d4e4eb;
-        }
+    <title>Test AR #3</title>
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+    <!-- A-Frame -->
+    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: var(--color-bg);
-            color: var(--color-text);
-            overflow: hidden;
-            width: 100%;
-            height: 100vh;
-        }
-
-        #arContainer {
-            width: 100%;
-            height: 100%;
-            position: relative;
-        }
-
-        .ar-scene {
-            width: 100%;
-            height: 100%;
-        }
-
-        .ui-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            padding: 20px;
-            pointer-events: none;
-            z-index: 10;
-        }
-
-        .header {
-            text-align: center;
-            background: rgba(0, 0, 0, 0.5);
-            padding: 15px;
-            border-radius: 12px;
-            backdrop-filter: blur(10px);
-        }
-
-        .header h1 {
-            font-size: 24px;
-            font-weight: 700;
-            letter-spacing: 1px;
-            margin-bottom: 5px;
-        }
-
-        .header p {
-            font-size: 12px;
-            opacity: 0.8;
-            margin: 2px 0;
-        }
-
-        .controls {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
-        .btn {
-            background: var(--color-primary);
-            color: var(--color-text);
-            border: none;
-            padding: 10px 16px;
-            border-radius: 8px;
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            pointer-events: all;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-        }
-
-        .btn:hover {
-            background: var(--color-accent);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
-        }
-
-        .btn:active {
-            transform: translateY(0);
-        }
-
-        .btn-secondary {
-            background: rgba(255, 255, 255, 0.2);
-            border: 1px solid var(--color-text);
-        }
-
-        .btn-secondary:hover {
-            background: rgba(255, 255, 255, 0.3);
-        }
-
-        .info-panel {
-            background: rgba(0, 0, 0, 0.6);
-            padding: 15px;
-            border-radius: 12px;
-            backdrop-filter: blur(10px);
-            font-size: 12px;
-            line-height: 1.6;
-            max-width: 280px;
-            border-left: 3px solid var(--color-accent);
-        }
-
-        .info-panel h3 {
-            color: var(--color-accent);
-            margin-bottom: 8px;
-            font-size: 14px;
-        }
-
-        .info-panel p {
-            margin: 4px 0;
-            opacity: 0.9;
-        }
-
-        .status {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            background: rgba(0, 0, 0, 0.7);
-            padding: 12px 16px;
-            border-radius: 8px;
-            font-size: 11px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            z-index: 10;
-            pointer-events: all;
-        }
-
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: #ff6b6b;
-            animation: pulse 2s infinite;
-        }
-
-        .status-dot.active {
-            background: #51cf66;
-            animation: none;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-
-        .hidden {
-            display: none;
-        }
-
-        @media (max-width: 600px) {
-            .header h1 {
-                font-size: 18px;
-            }
-
-            .info-panel {
-                max-width: 100%;
-            }
-
-            .controls {
-                gap: 8px;
-            }
-
-            .btn {
-                padding: 8px 12px;
-                font-size: 10px;
-            }
-        }
-    </style>
+    <!-- AR.js -->
+    <script src="https://cdn.rawgit.com/jeromeetienne/AR.js/2.1.7/aframe/build/aframe-ar.js"></script>
 </head>
-<body>
-    <div id="arContainer">
-        <div class="ui-overlay">
-            <div class="header">
-                <h1>📍 Scan le Marqueur</h1>
-                <p>Pointe vers le marqueur Hiro pour voir l'effet AR</p>
-            </div>
 
-            <div class="controls">
-                <button class="btn" id="toggleAR">▶ Démarrer AR</button>
-                <button class="btn btn-secondary" id="toggleInfo">ℹ Info</button>
-            </div>
+<body style="margin: 0; overflow: hidden;">
 
-            <div class="info-panel" id="infoPanel">
-                <h3>🎓 Théo Metayer</h3>
-                <p><strong>Statut:</strong> Étudiant</p>
-                <p><strong>École:</strong> IUT de Corse</p>
-                <p><strong>Ville:</strong> Corte, Corsica</p>
-                <p><strong>Téléphone:</strong> 07 83 09 28 36</p>
-                <p style="margin-top: 10px; color: var(--color-accent);">
-                    💻 Web & Mobile Development<br>
-                    🎮 Game Design<br>
-                    🎨 UX/UI Design
-                </p>
-            </div>
-        </div>
+    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;">
+        
+        <!-- Marker for tracking -->
+        <a-marker
+            type="pattern"
+            url="/AR/pattern-hiro.patt"
+            emitevents="true"
+            id="marker"
+        >
+            <!-- Plane to display the image -->
+            <a-plane
+                id="imagePlane"
+                position="4 0 0"
+                rotation="-90 0 0"
+                width="4"
+                height="2.25"
+                material="shader: flat;"
+                scale="2 2 2">
+            </a-plane>
+        </a-marker>
 
-        <div class="status">
-            <div class="status-dot" id="statusDot"></div>
-            <span id="statusText">En attente...</span>
-        </div>
-    </div>
+        <!-- Camera -->
+        <a-entity camera></a-entity>
 
+    </a-scene>
+
+    <!-- Script -->
     <script>
-        // ============= Configuration AR.js =============
-        class ARApp {
-            constructor() {
-                this.arButton = document.getElementById('toggleAR');
-                this.infoBtn = document.getElementById('toggleInfo');
-                this.infoPanel = document.getElementById('infoPanel');
-                this.statusDot = document.getElementById('statusDot');
-                this.statusText = document.getElementById('statusText');
-                
-                this.isARSupported = this.checkARSupport();
-                this.scene = null;
-                this.camera = null;
-                this.renderer = null;
-                this.arSource = null;
-                this.arSession = null;
-                this.arController = null;
-                this.container = null;
+        const imagePlane = document.getElementById("imagePlane");
+        const marker = document.getElementById("marker");
 
-                this.init();
+        const imageUrl = "capture.jpg";
+        let isAnimationRunning = false; // To prevent multiple animations
+
+        // Marker found
+        marker.addEventListener("markerFound", () => {
+            if (!isAnimationRunning) {
+                animatePosition(0, 4, 0, 1000); 
+                // Animates from (0, 0, 0) to (4, 0, 0) in 1 second
             }
+        });
 
-            checkARSupport() {
-                return navigator.mediaDevices && navigator.mediaDevices.getUserMedia;
+        // Marker lost
+        marker.addEventListener("markerLost", () => {
+            if (!isAnimationRunning) {
+                animatePosition(4, 0, 0, 1000); 
+                // Animates from (4, 0, 0) to (0, 0, 0) in 1 second
             }
+        });
 
-            updateStatus(message, isActive = false) {
-                this.statusText.textContent = message;
-                this.statusDot.classList.toggle('active', isActive);
-            }
+        function animatePosition(startX, endX, endY, duration) {
+            isAnimationRunning = true;
 
-            async init() {
-                if (!this.isARSupported) {
-                    this.updateStatus('❌ AR non supporté');
-                    this.arButton.disabled = true;
-                    return;
-                }
+            const startTime = performance.now();
+            const startY = 0;
 
-                this.setupEventListeners();
-                this.updateStatus('✓ Prêt', true);
-            }
+            function updatePosition(currentTime) {
+                const elapsedTime = currentTime - startTime;
 
-            setupEventListeners() {
-                this.arButton.addEventListener('click', () => this.toggleAR());
-                this.infoBtn.addEventListener('click', () => this.toggleInfo());
-            }
+                if (elapsedTime < duration) {
+                    const newX = startX + (endX - startX) * (elapsedTime / duration);
+                    const newY = startY + (endY - startY) * (elapsedTime / duration);
 
-            toggleInfo() {
-                this.infoPanel.classList.toggle('hidden');
-            }
+                    imagePlane.setAttribute(
+                        "position",
+                        `${newX} ${newY} 0`
+                    );
 
-            async toggleAR() {
-                try {
-                    if (!this.scene) {
-                        await this.initAR();
-                        this.arButton.textContent = '⏹ Arrêter AR';
-                    } else {
-                        this.stopAR();
-                        this.arButton.textContent = '▶ Démarrer AR';
-                    }
-                } catch (error) {
-                    console.error('Erreur AR:', error);
-                    this.updateStatus('❌ Erreur AR');
+                    requestAnimationFrame(updatePosition);
+                } else {
+                    imagePlane.setAttribute(
+                        "position",
+                        `${endX} ${endY} 0`
+                    );
+                    isAnimationRunning = false;
                 }
             }
 
-            async initAR() {
-                this.updateStatus('⏳ Initialisation AR...', true);
-
-                // Créer la scène Three.js
-                this.scene = new THREE.Scene();
-                
-                // Caméra
-                this.camera = new THREE.Camera();
-                this.scene.add(this.camera);
-
-                // Renderer
-                this.renderer = new THREE.WebGLRenderer({ 
-                    antialias: true, 
-                    alpha: true,
-                    preserveDrawingBuffer: true 
-                });
-                this.renderer.setSize(window.innerWidth, window.innerHeight);
-                this.renderer.setClearColor(0x000000, 0);
-                this.renderer.domElement.style.position = 'absolute';
-                this.renderer.domElement.style.top = '0';
-                this.renderer.domElement.style.left = '0';
-                this.renderer.domElement.style.zIndex = '1';
-                
-                document.getElementById('arContainer').appendChild(this.renderer.domElement);
-
-                // Lumière
-                const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
-                this.scene.add(light);
-
-                // Initialiser ARToolKit
-                this.setupARToolKit();
-
-                // Animation loop
-                this.animate();
-            }
-
-            setupARToolKit() {
-                // URL du fichier de marqueur (utiliser Hiro par défaut)
-                const patternURL = 'https://cdn.jsdelivr.net/npm/ar.js@3.4.5/three.js/data/data/patt.hiro';
-                
-                // Créer le contrôleur AR
-                ARToolKit.THREE.ArToolkitSource.prototype.onResize = function() {
-                    this.copySizeTo(this.domElement);
-                    if (this.context) { this.copySizeTo(this.context.canvas); }
-                };
-
-                const arSource = new THREEx.ArToolkitSource({
-                    sourceType: 'webcam',
-                });
-
-                arSource.init(() => {
-                    setTimeout(() => {
-                        arSource.onResize();
-                        arSource.copySizeTo(this.renderer.domElement);
-                    }, 1000);
-                });
-
-                this.arSource = arSource;
-
-                // Paramètres du contrôleur
-                const arController = new THREEx.ArToolkitContext({
-                    cameraParametersUrl: 'https://cdn.jsdelivr.net/npm/ar.js@3.4.5/three.js/data/data/camera_para.dat',
-                    detectionMode: 'mono',
-                });
-
-                arController.init(() => {
-                    this.camera.projectionMatrix.copy(arController.getProjectionMatrix());
-                });
-
-                this.arController = arController;
-
-                // Créer le marqueur
-                const markerGroup = new THREE.Group();
-                const markerControls = new THREEx.ArMarkerControls(arController, markerGroup, {
-                    type: 'pattern',
-                    patternUrl: patternURL,
-                });
-
-                this.scene.add(markerGroup);
-
-                // Créer l'objet 3D pour le marqueur
-                this.createARContent(markerGroup);
-
-                this.updateStatus('✓ AR Actif', true);
-            }
-
-            createARContent(markerGroup) {
-                // Géométrie: Cube rotatif
-                const geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
-                const material = new THREE.MeshPhongMaterial({
-                    color: 0x32b8c6,
-                    emissive: 0x208090,
-                    shininess: 100,
-                });
-                const cube = new THREE.Mesh(geometry, material);
-                cube.position.z = 0.5;
-                cube.rotation.order = 'YXZ';
-                markerGroup.add(cube);
-
-                // Texte 3D
-                const canvas = document.createElement('canvas');
-                canvas.width = 512;
-                canvas.height = 256;
-                const ctx = canvas.getContext('2d');
-                ctx.fillStyle = '#32b8c6';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                ctx.fillStyle = '#ffffff';
-                ctx.font = 'bold 60px Arial';
-                ctx.textAlign = 'center';
-                ctx.fillText('Théo', canvas.width / 2, 100);
-                ctx.font = '40px Arial';
-                ctx.fillText('IUT Corse', canvas.width / 2, 160);
-                ctx.fillStyle = '#d4e4eb';
-                ctx.font = '30px Arial';
-                ctx.fillText('07 83 09 28 36', canvas.width / 2, 220);
-
-                const texture = new THREE.CanvasTexture(canvas);
-                const planeGeo = new THREE.PlaneGeometry(1.2, 0.6);
-                const planeMat = new THREE.MeshBasicMaterial({ map: texture });
-                const plane = new THREE.Mesh(planeGeo, planeMat);
-                plane.position.set(0, -0.8, 0);
-                markerGroup.add(plane);
-
-                // Torus (anneau rotatif)
-                const torusGeo = new THREE.TorusGeometry(0.4, 0.1, 16, 100);
-                const torusMat = new THREE.MeshPhongMaterial({ color: 0xd4e4eb });
-                const torus = new THREE.Mesh(torusGeo, torusMat);
-                torus.position.z = 0.3;
-                torus.rotation.x = Math.PI / 3;
-                markerGroup.add(torus);
-
-                // Stocker pour l'animation
-                markerGroup.userData.cube = cube;
-                markerGroup.userData.torus = torus;
-                markerGroup.userData.plane = plane;
-            }
-
-            animate = () => {
-                requestAnimationFrame(this.animate);
-
-                if (this.arSource && this.arController) {
-                    this.arSource.update(this.arController.instance);
-                    this.arController.update(this.arController.instance.getProjectionAxisConversionMatrix());
-                }
-
-                // Animation des objets 3D
-                this.scene.children.forEach(group => {
-                    if (group.userData.cube) {
-                        group.userData.cube.rotation.x += 0.01;
-                        group.userData.cube.rotation.y += 0.015;
-                    }
-                    if (group.userData.torus) {
-                        group.userData.torus.rotation.y += 0.02;
-                        group.userData.torus.rotation.z += 0.01;
-                    }
-                });
-
-                this.renderer.render(this.scene, this.camera);
-            }
-
-            stopAR() {
-                if (this.renderer && this.renderer.domElement.parentNode) {
-                    document.getElementById('arContainer').removeChild(this.renderer.domElement);
-                }
-                this.scene = null;
-                this.renderer = null;
-                this.updateStatus('✓ Prêt', true);
-            }
+            requestAnimationFrame(updatePosition);
         }
 
-        // Démarrer l'application
-        window.addEventListener('load', () => {
-            new ARApp();
-        });
-
-        // Gérer le redimensionnement
-        window.addEventListener('resize', () => {
-            if (window.ARApp && window.ARApp.renderer) {
-                window.ARApp.renderer.setSize(window.innerWidth, window.innerHeight);
-            }
-        });
+        // Function to update the image source
+        function updateImageSource() {
+            imagePlane.setAttribute("material", "src", imageUrl);
+        }
+        updateImageSource();
+        setInterval(updateImageSource, 1000); // Update every second
     </script>
+
 </body>
 </html>
