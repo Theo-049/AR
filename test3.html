@@ -7,42 +7,56 @@
 </head>
 <body style="margin: 0; overflow: hidden;">
     <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;">
-        <!-- Assets preload -->
-        <a-assets>
-            <img id="cardImage" src="capture.jpg" crossorigin="anonymous">
-        </a-assets>
-        
         <!-- Marker for tracking -->
-        <a-marker type="pattern" url="pattern-hiro.patt" emitevents="true" id="marker">
+        <a-marker type="pattern" url="/AR/pattern-hiro.patt" emitevents="true" id="marker">
             <!-- Plane to display the image -->
-            <a-plane 
-                id="imagePlane" 
-                src="#cardImage" 
-                position="0 0 0" 
-                rotation="-90 0 0" 
-                width="2" 
-                height="1.25"
-                material="shader: flat; side: double">
-            </a-plane>
+            <a-image id="imagePlane" src="capture.jpg" position="4 0 0" rotation="-90 0 0" width="4" height="2.25"></a-image>
         </a-marker>
-        
         <!-- Camera to view the scene -->
         <a-entity camera></a-entity>
     </a-scene>
-
+    <!-- Script to refresh every 5 seconds -->
     <script>
-        const imagePlane = document.getElementById("imagePlane");
         const marker = document.getElementById("marker");
 
+        let isAnimationRunning = false; // To prevent multiple animations
+
         marker.addEventListener("markerFound", () => {
-            console.log('✓ Marqueur détecté!');
-            imagePlane.setAttribute('visible', 'true');
+            if (!isAnimationRunning) {
+                animatePosition(4, 0, 0, 1000); // Animates from (0, 0, 0) to (4, 0, 0) in 1 second
+            }
         });
 
         marker.addEventListener("markerLost", () => {
-            console.log('✗ Marqueur perdu');
-            imagePlane.setAttribute('visible', 'false');
+            if (!isAnimationRunning) {
+                animatePosition(4, 0, 0, 1000); // Animates from (4, 0, 0) to (0, 0, 0) in 1 second
+            }
         });
+
+        function animatePosition(startX, endX, endY, duration) {
+            isAnimationRunning = true;
+            const startTime = performance.now();
+            const startY = 0;
+
+            function updatePosition(currentTime) {
+                const elapsedTime = currentTime - startTime;
+                if (elapsedTime < duration) {
+                    const newX = startX + (endX - startX) * (elapsedTime / duration);
+                    const newY = startY + (endY - startY) * (elapsedTime / duration);
+                    imagePlane.setAttribute("position", `${newX} ${newY} 0`);
+                    requestAnimationFrame(updatePosition);
+                } else {
+                    imagePlane.setAttribute("position", `${endX} ${endY} 0`);
+                    isAnimationRunning = false;
+                }
+            }
+
+            requestAnimationFrame(updatePosition);
+        }
+        // Initial image update
+        updateImageSource();
+        // Check for image update every 5 seconds
+        setInterval(updateImageSource, 5000);
     </script>
 </body>
 </html>
