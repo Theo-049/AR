@@ -1,91 +1,54 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Test AR #3 Corrigé</title>
+    <title>Test AR #3</title>
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
-    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    <script src="https://cdn.rawgit.com/jeromeetienne/AR.js/2.1.7/aframe/build/aframe-ar.js"></script>
 </head>
 <body style="margin: 0; overflow: hidden;">
-    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false; trackingMethod: best;">
-        <a-marker type="pattern" url="/AR/pattern-hiro.patt" emitevents="true" id="marker">
-            <a-plane id="imagePlane"
-                     position="4 0 0"
-                     rotation="-90 0 0"
-                     width="4" height="2.25"
-                     material="shader: flat; color: #FFF;"
-                     scale="2 2 2">
+    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;">
+        <!-- Assets: précharge l'image -->
+        <a-assets>
+            <img id="cardImg" src="capture.jpg" crossorigin="anonymous">
+        </a-assets>
+        
+        <!-- Marker for tracking -->
+        <a-marker type="pattern" url="pattern-hiro.patt" emitevents="true" id="marker">
+            <!-- Plane to display the image -->
+            <a-plane 
+                id="imagePlane" 
+                src="#cardImg"
+                position="0 0 0" 
+                rotation="-90 0 0" 
+                width="2" 
+                height="1.25"
+                material="shader: flat; side: double">
             </a-plane>
         </a-marker>
+        
+        <!-- Camera to view the scene -->
         <a-entity camera></a-entity>
     </a-scene>
 
     <script>
         const imagePlane = document.getElementById("imagePlane");
         const marker = document.getElementById("marker");
-        // ASSUREZ-VOUS QUE CE FICHIER EXISTE à côté de votre fichier HTML
-        const imageUrl = "capture.jpg";
-
-        let isAnimationRunning = false;
 
         marker.addEventListener("markerFound", () => {
-            if (!isAnimationRunning) {
-                // CORRECTION ANIMATION : On va de la position de repos (4) vers le centre (0)
-                animatePosition(4, 0, 0, 1000);
-            }
+            console.log('✓ Marqueur trouvé!');
+            // Animation: faire apparaître la carte
+            imagePlane.setAttribute('animation', {
+                property: 'scale',
+                from: '0.1 0.1 0.1',
+                to: '1 1 1',
+                dur: 800,
+                easing: 'easeOutElastic'
+            });
         });
 
         marker.addEventListener("markerLost", () => {
-            if (!isAnimationRunning) {
-                // CORRECTION ANIMATION : On retourne du centre (0) vers la position de repos (4)
-                animatePosition(0, 4, 0, 1000);
-            }
+            console.log('✗ Marqueur perdu');
         });
-
-        function animatePosition(startX, endX, endY, duration) {
-            isAnimationRunning = true;
-            const startTime = performance.now();
-            const startY = 0;
-
-            function updatePosition(currentTime) {
-                const elapsedTime = currentTime - startTime;
-                if (elapsedTime < duration) {
-                    const newX = startX + (endX - startX) * (elapsedTime / duration);
-                    // Note: Votre fonction utilisait startY=0 pour le calcul Y, j'ai gardé cette logique.
-                    // Si vous voulez que le Y change aussi, il faudrait adapter les paramètres.
-                    const newY = startY + (endY - startY) * (elapsedTime / duration);
-                    imagePlane.setAttribute("position", `${newX} ${newY} 0`);
-                    requestAnimationFrame(updatePosition);
-                } else {
-                    imagePlane.setAttribute("position", `${endX} ${endY} 0`);
-                    isAnimationRunning = false;
-                }
-            }
-            requestAnimationFrame(updatePosition);
-        }
-
-        // Function to update the image source
-        function updateImageSource() {
-            const uniqueParam = Date.now(); // Generate a unique parameter
-            const newImageUrl = `${imageUrl}?v=${uniqueParam}`;
-
-            // CORRECTION ICI : Utiliser un objet pour définir les propriétés du matériau est plus robuste.
-            // On réaffirme que le shader est 'flat' en même temps qu'on change la source.
-            imagePlane.setAttribute('material', {
-                shader: 'flat',
-                src: newImageUrl,
-                color: '#FFF' // On s'assure que la couleur reste blanche
-            });
-
-            console.log("Tentative de chargement de l'image : " + newImageUrl);
-        }
-
-        // Initial image update pour lancer le processus
-        // On attend un petit peu que la scène soit prête
-        setTimeout(updateImageSource, 1000);
-
-        // Check for image update every 5 seconds
-        setInterval(updateImageSource, 5000);
     </script>
 </body>
 </html>
-
